@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+var/
+data/generated/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+node_modules/
+clients/vscode-extension/out/
+*.db
+*.joblib
+mlruns/
+.DS_Store

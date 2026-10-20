@@ -1,0 +1,84 @@
+# Laptop-scale MVP stack (spec 12.2). `make up` from the repo root.
+# The API works on its own; every other service is optional and wired through environment variables.
+name: helix
+
+services:
+  api:
+    build: { context: .., dockerfile: infra/docker/Dockerfile }
+    ports: ["8000:8000"]
+    environment:
+      HELIX_ENV: dev
+      HELIX_OPA_URL: http://opa:8181
+      # Point tiers at Ollama once models are pulled (see `ollama-pull` below); blank = mock provider
+      HELIX_T1A_URL: ${HELIX_T1A_URL:-}
+      HELIX_T1A_MODEL: qwen2.5-coder:1.5b-base
+      HELIX_T1B_URL: ${HELIX_T1B_URL:-}
+      HELIX_T1B_MODEL: qwen2.5-coder:7b-instruct
+      HELIX_T2_URL: ${HELIX_T2_URL:-}
+      HELIX_T2_MODEL: llama3.1:8b-instruct-q4_K_M
+    depends_on: [opa]
+
+  opa:                       # policy gate (configs/policy/helix.rego)
+    image: openpolicyagent/opa:0.68.0
+    command: ["run", "--server", "--addr", ":8181", "/policy/helix.rego", "/policy/data.json"]
+    volumes: ["../configs/policy:/policy:ro"]
+    ports: ["8181:8181"]
+
+  ollama:                    # local models for T1a / T1b / T2 (CPU works; GPU recommended)
+    image: ollama/ollama:0.3.14
+    ports: ["11434:11434"]
+    volumes: ["ollama:/root/.ollama"]
+    profiles: ["models"]
+
+  ollama-pull:
+    image: ollama/ollama:0.3.14
+    depends_on: [ollama]
+    entrypoint: ["/bin/sh", "-c", "sleep 5; OLLAMA_HOST=ollama:11434 ollama pull qwen2.5-coder:1.5b-base && OLLAMA_HOST=ollama:11434 ollama pull qwen2.5-coder:7b-instruct"]
+    profiles: ["models"]
+
+  qdrant:                    # vector store with payload ACL filters
+    image: qdrant/qdrant:v1.12.1
+    ports: ["6333:6333"]
+    profiles: ["stores"]
+
+  opensearch:                # BM25 at scale
+    image: opensearchproject/opensearch:2.17.1
+    environment: { discovery.type: single-node, DISABLE_SECURITY_PLUGIN: "true", OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m" }
+    ports: ["9200:9200"]
+    profiles: ["stores"]
+
+  neo4j:                     # code graph
+    image: neo4j:5.24-community
+    environment: { NEO4J_AUTH: neo4j/helix-dev-password }
+    ports: ["7474:7474", "7687:7687"]
+    profiles: ["stores"]
+
+  postgres:                  # production replacement for SQLite stores + LangGraph checkpoints
+    image: postgres:16
+    environment: { POSTGRES_PASSWORD: helix, POSTGRES_DB: helix }
+    ports: ["5432:5432"]
+    profiles: ["stores"]
+
+  redis:                     # semantic cache, rate limits, sessions
+    image: redis:7.4
+    ports: ["6379:6379"]
+    profiles: ["stores"]
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes: ["./prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+    profiles: ["observability"]
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    ports: ["3000:3000"]
+    profiles: ["observability"]
+
+  loki:
+    image: grafana/loki:3.2.0
+    ports: ["3100:3100"]
+    profiles: ["observability"]
+
+volumes:
+  ollama: {}

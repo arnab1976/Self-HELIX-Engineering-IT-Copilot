@@ -1,0 +1,39 @@
+# L4 FIM completion adapter - Axolotl config (alternative to lexora/train/l4_fim.py)
+# Run: accelerate launch -m axolotl.cli.train configs/train/l4_fim_axolotl.yaml
+base_model: Qwen/Qwen2.5-Coder-1.5B
+model_type: AutoModelForCausalLM
+tokenizer_type: AutoTokenizer
+
+load_in_8bit: false
+load_in_4bit: false
+adapter: lora
+lora_r: 32
+lora_alpha: 64
+lora_dropout: 0.05
+lora_target_linear: true          # q,k,v,o,gate,up,down
+
+datasets:
+  - path: var/datasets/fim/train.jsonl   # produced by: python -m lexora.prep.pipeline --fim
+    type: completion                     # field "text" already contains <|fim_prefix|>...<|fim_middle|>...
+    field: text
+dataset_prepared_path: var/axolotl_prepared
+val_set_size: 0.02
+output_dir: var/artifacts/l4_fim
+
+sequence_len: 4096
+sample_packing: true
+pad_to_sequence_len: true
+
+gradient_accumulation_steps: 8
+micro_batch_size: 2
+num_epochs: 1
+optimizer: adamw_torch
+lr_scheduler: cosine
+learning_rate: 1.0e-4
+warmup_ratio: 0.03
+bf16: auto
+gradient_checkpointing: true
+flash_attention: true
+logging_steps: 10
+eval_steps: 200
+save_steps: 200

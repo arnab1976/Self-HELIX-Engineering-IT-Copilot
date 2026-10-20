@@ -1,0 +1,24 @@
+# Schema / metric catalogue used by schema RAG for text-to-query (spec C7).
+sql:
+  datasource: warehouse            # SQLite file built by scripts/generate_sample_data.py
+  tables:
+    orders:
+      description: One row per checkout order
+      columns: { id: integer, customer_id: text, status: "text (PAID, FAILED, REFUNDED)", total: real, region: text, created_at: "text ISO-8601" }
+    customers:
+      description: Customer master data
+      columns: { id: text, segment: text, country: text }
+    deployments:
+      description: Production deployments by service
+      columns: { id: integer, service: text, version: text, deployed_at: text, status: text }
+promql:
+  metrics:
+    http_requests_total: { type: counter, labels: [service, status, region], description: "HTTP requests served" }
+    http_request_duration_seconds_bucket: { type: histogram, labels: [service, le], description: "Request latency histogram" }
+    container_memory_working_set_bytes: { type: gauge, labels: [pod, container], description: "Container memory" }
+logql:
+  streams:
+    '{app="checkout"}': { labels: [app, pod, level], description: "Checkout service logs" }
+kql:
+  tables:
+    SigninLogs: { columns: [TimeGenerated, ResultType, AppDisplayName, UserPrincipalName] }

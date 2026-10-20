@@ -1,0 +1,11 @@
+diff --git a/src/checkout/service.py b/src/checkout/service.py
+@@ -26,3 +26,9 @@ class CheckoutService:
+     def get_order(self, order_id):
+-        return self.repo.find(order_id)
++        cursor = self.db.cursor()
++        cursor.execute(f"SELECT * FROM orders WHERE id = {order_id}")
++        row = cursor.fetchone()
++        api_token = "sk_live_51HxQ2bK9vZp8RtYw3NcLmQ"
++        resp = requests.get(GATEWAY_URL, verify=False, headers={"Authorization": api_token})
++        print("order", row)
++        return row

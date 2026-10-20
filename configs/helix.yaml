@@ -1,0 +1,118 @@
+# HELIX platform configuration. Values here are the spec defaults (UC-3 v1.0).
+# Environment variables (see .env.example) override endpoints and secrets.
+
+platform:
+  name: HELIX
+  version: 0.1.0
+
+# ---------------------------------------------------------------- identity & access
+roles:
+  employee:        { repo_classes: [public] }
+  engineer:        { repo_classes: [public, internal, confidential] }
+  sre:             { repo_classes: [public, internal, confidential], can_approve_runbooks: true }
+  service_desk:    { repo_classes: [public, internal] }
+  manager:         { repo_classes: [public, internal], can_approve_access: true }
+  payments_engineer: { repo_classes: [public, internal, confidential, restricted] }
+
+# Repository classification is a HARD input to the policy gate (spec 6.1).
+repositories:
+  docs/engineering-handbook: public
+  payments/checkout-service: internal
+  platform/infra-live: confidential
+  hr/compensation-portal: confidential
+  payments/card-vault: restricted
+
+# Dev personas for /v1/dev/token (HELIX_ENV=dev only)
+dev_users:
+  u.priya:   { name: Priya Raman,  roles: [employee], manager: venkat.k, device: LT-7731 }
+  u.arjun:   { name: Arjun Mehta,  roles: [employee, engineer] }
+  sre.anita: { name: Anita Rao,    roles: [employee, engineer, sre] }
+  u.kavya:   { name: Kavya Iyer,   roles: [employee, engineer, payments_engineer] }
+  agent.sam: { name: Sam Thomas,   roles: [employee, service_desk] }
+  venkat.k:  { name: Venkat K,     roles: [employee, manager] }
+
+# ---------------------------------------------------------------- gateway
+gateway:
+  rate_limit: { capacity: 20, refill_per_sec: 1.0 }      # token bucket per user
+  completion_rate_limit: { capacity: 60, refill_per_sec: 10.0 }
+  block_on_high_confidence_secret: true
+  injection_block_threshold: 0.80
+  max_prompt_chars: 200000
+
+# ---------------------------------------------------------------- model tiers (spec 5.2)
+tiers:
+  T0:  { purpose: "classifiers, embedder, reranker", provider: local }
+  T1a: { purpose: "L4 FIM completion", model_card: lexora/fim-coder,     cost_per_req: 0.0002, latency_ms: 180,  context: 8000,   external: false }
+  T1b: { purpose: "L5 code chat/review", model_card: lexora/code-review, cost_per_req: 0.004,  latency_ms: 900,  context: 32000,  external: false }
+  T1c: { purpose: "L6 text-to-query, L7 incident", model_card: lexora/text2query, cost_per_req: 0.0015, latency_ms: 700, context: 32000, external: false }
+  T2:  { purpose: "general instruct", cost_per_req: 0.002, latency_ms: 600,  context: 32000,  external: false }
+  T3:  { purpose: "frontier (private endpoint, ZDR)", cost_per_req: 0.03, latency_ms: 1500, context: 200000, external: true }
+
+# ---------------------------------------------------------------- router (spec 6.1)
+router:
+  lambda_cost: 0.3
+  lambda_latency: 0.2
+  cost_norm: 0.03
+  latency_norm: 1500
+  routes:
+    completion: { candidates: [T1a], fixed: true,  q_min: 0.0, fallback: "Return no suggestion; never block typing" }
+    code_q:     { candidates: [T1b, T2, T3],        q_min: 0.75, fallback: "T3 only if repo allows external models and question is complex" }
+    pr_review:  { candidates: [T1b, T3],            q_min: 0.75, fallback: "Queue and retry; skip review rather than degrade silently" }
+    it:         { candidates: [T2, T3],             q_min: 0.70, fallback: "Hand off to human service desk with conversation summary" }
+    knowledge:  { candidates: [T2, T1b, T3],        q_min: 0.70, fallback: "T3 for multi-document synthesis" }
+    t2q:        { candidates: [T1c, T2, T3],        q_min: 0.75, fallback: "Return query unexecuted with warning" }
+    incident:   { candidates: [T1c, T2, T3],        q_min: 0.70, fallback: "T3 with log redaction if context exceeds self-hosted window" }
+  # expected quality per (route, tier); replaced by router-eval results in production
+  quality:
+    code_q:    { T1b: 0.82, T2: 0.70, T3: 0.90 }
+    pr_review: { T1b: 0.84, T3: 0.88 }
+    it:        { T2: 0.84, T3: 0.86 }
+    knowledge: { T2: 0.80, T1b: 0.74, T3: 0.88 }
+    t2q:       { T1c: 0.83, T2: 0.68, T3: 0.85 }
+    incident:  { T1c: 0.80, T2: 0.70, T3: 0.88 }
+    completion: { T1a: 0.75 }
+
+# ---------------------------------------------------------------- retrieval (spec 6.3)
+rag:
+  rrf_k: 60
+  bm25: { k1: 1.2, b: 0.75 }
+  dense_top_k: 20
+  bm25_top_k: 20
+  graph_hops: 1
+  rerank_top_n: 50
+  context_chunks: 8
+  doc_chunk_tokens: 600
+  doc_chunk_overlap: 0.15
+  semantic_cache_threshold: 0.95
+
+completion:
+  debounce_ms: 150
+  context_tokens: 1000
+  max_tokens: 64
+
+# ---------------------------------------------------------------- workflows
+triage:
+  auto_route_threshold: 0.85
+  temperature: null              # fitted on validation during training; stored in the model card
+duplicates:
+  threshold: 0.80                # chosen at precision >= 0.90 during L8 training
+incident:
+  zscore_window: 20
+  zscore_threshold: 3.0
+  overlap_tau_minutes: 5
+  slo_error_rate_pct: 1.0
+change_risk:
+  bands: { low: 0.10, medium: 0.25 }
+approvals:
+  token_ttl_minutes: 10
+
+# ---------------------------------------------------------------- release gates (spec 4.5)
+release_gates:
+  lexora/triage:        { top1_group_accuracy: [">=", 0.85], ece: ["<=", 0.05] }
+  lexora/retriever:     { recall_at_10: [">=", 0.85] }
+  lexora/fim-coder:     { pass_at_1_lift_points: [">=", 5.0], p95_first_token_ms: ["<=", 300] }
+  lexora/code-review:   { comment_acceptance: [">=", 0.35], hallucinated_api_rate: ["<=", 0.02] }
+  lexora/text2query:    { execution_accuracy: [">=", 0.80], read_only_rate: [">=", 1.0] }
+  lexora/incident:      { unsupported_claim_rate: ["<=", 0.02], sre_rubric: [">=", 4.0] }
+  lexora/duplicates:    { precision: [">=", 0.90] }
+  lexora/change-risk:   { auc: [">=", 0.75] }

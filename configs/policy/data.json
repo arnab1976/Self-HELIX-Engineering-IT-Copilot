@@ -1,0 +1,17 @@
+{
+  "roles": {
+    "employee": {"repo_classes": ["public"]},
+    "engineer": {"repo_classes": ["public", "internal", "confidential"]},
+    "sre": {"repo_classes": ["public", "internal", "confidential"]},
+    "service_desk": {"repo_classes": ["public", "internal"]},
+    "manager": {"repo_classes": ["public", "internal"]},
+    "payments_engineer": {"repo_classes": ["public", "internal", "confidential", "restricted"]}
+  },
+  "tiers": {
+    "T1a": {"external": false},
+    "T1b": {"external": false},
+    "T1c": {"external": false},
+    "T2": {"external": false},
+    "T3": {"external": true}
+  }
+}

@@ -1,0 +1,73 @@
+# LEXORA training recipes (spec 4.4). Read by lexora/train/*.py; CLI flags override.
+l1_triage:
+  base_model: answerdotai/ModernBERT-base      # GPU path; baseline path uses TF-IDF + logistic regression
+  heads: [category, assignment_group, priority]
+  max_length: 512
+  learning_rate: 2.0e-5
+  batch_size: 32
+  epochs: 3
+  class_weighting: inverse_frequency
+  calibration: temperature_scaling
+
+l2_embedder:
+  base_model: BAAI/bge-m3
+  loss: MultipleNegativesRankingLoss
+  temperature: 0.05
+  batch_size: 128
+  epochs: 1
+  hard_negatives_per_query: 3
+
+l3_reranker:
+  base_model: BAAI/bge-reranker-v2-m3
+  loss: binary_cross_entropy
+  learning_rate: 2.0e-5
+  epochs: 1
+  negatives_per_positive: 4
+
+l4_fim:
+  base_model: Qwen/Qwen2.5-Coder-1.5B
+  fim_rate: 0.5
+  spm_rate: 0.5
+  lora: { r: 32, alpha: 64, dropout: 0.05, target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj] }
+  learning_rate: 1.0e-4
+  max_length: 4096
+  epochs: 1
+
+l5_sft:
+  base_model: Qwen/Qwen2.5-Coder-7B-Instruct    # spec targets ~30B in production
+  quantization: nf4
+  lora: { r: 16, alpha: 32, dropout: 0.05, target_modules: all-linear }
+  learning_rate: 2.0e-4
+  max_length: 4096
+  epochs: 3
+l5_dpo:
+  beta: 0.1
+  learning_rate: 5.0e-6
+  epochs: 1
+
+l6_text2query:
+  base_model: Qwen/Qwen2.5-Coder-7B-Instruct
+  quantization: nf4
+  lora: { r: 16, alpha: 32, dropout: 0.05, target_modules: all-linear }
+  learning_rate: 2.0e-4
+  epochs: 3
+  keep_only_executable_pairs: true
+
+l7_incident:
+  base_model: meta-llama/Llama-3.1-8B-Instruct
+  quantization: nf4
+  lora: { r: 16, alpha: 32, dropout: 0.05, target_modules: all-linear }
+  learning_rate: 2.0e-4
+  epochs: 3
+  dpo_beta: 0.1
+
+l8_duplicates:
+  model: logistic_regression
+  features: [cosine, same_ci, same_requester, gap_days]
+  target_precision: 0.90
+
+l9_change_risk:
+  model: lightgbm
+  params: { objective: binary, num_leaves: 15, learning_rate: 0.03, n_estimators: 300, min_child_samples: 30, subsample: 0.8, subsample_freq: 1, colsample_bytree: 0.8 }
+  split: time_based
+  holdout_fraction: 0.2

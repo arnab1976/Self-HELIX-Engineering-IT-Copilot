@@ -1,0 +1,31 @@
+:root{--bg:#f3f5f8;--surface:#fff;--sunken:#eef1f5;--ink:#15202d;--muted:#5b6878;--line:#d6dce4;--accent:#2f4bd8;--accent-soft:#e4e9fc;--ok:#1f8a4c;--warn:#b7791f;--bad:#c2372f;--code:#101826;--codefg:#d7e0ea}
+@media (prefers-color-scheme:dark){:root{--bg:#0e141c;--surface:#151e29;--sunken:#111923;--ink:#e3e9f0;--muted:#93a1b2;--line:#283444;--accent:#7d93ff;--accent-soft:#1e2a52;--ok:#4cc782;--warn:#e8b04b;--bad:#f06b60}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 "IBM Plex Sans","Segoe UI",system-ui,sans-serif}
+.top{position:sticky;top:0;z-index:5;display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand b{font-size:18px;letter-spacing:.04em}.brand span{color:var(--muted);margin-left:8px;font-size:12px}
+nav{display:flex;gap:4px;flex-wrap:wrap;flex:1}nav button{background:none;border:1px solid transparent;border-radius:8px;padding:6px 10px;color:var(--muted);cursor:pointer;font:inherit}
+nav button.on{color:var(--ink);border-color:var(--line);background:var(--sunken)}
+.persona{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted)}
+select,input,textarea{font:inherit;color:var(--ink);background:var(--sunken);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%}
+textarea{font-family:"JetBrains Mono",ui-monospace,Consolas,monospace;font-size:12.5px}
+main{max-width:1200px;margin:0 auto;padding:18px 16px 60px}
+h2{margin:0 0 4px;font-size:22px}p.sub{margin:0 0 14px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit;font-weight:600;color:var(--ink)}
+.btn.p{background:var(--accent);border-color:var(--accent);color:#fff}.btn.ok{border-color:var(--ok);color:var(--ok)}.btn.bad{border-color:var(--bad);color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:default}
+pre{background:var(--code);color:var(--codefg);padding:10px 12px;border-radius:8px;overflow:auto;font-size:12px;max-height:420px;margin:8px 0 0;white-space:pre-wrap;word-break:break-word}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--sunken);border:1px solid var(--line);margin:2px}
+.tag.ok{color:var(--ok);border-color:var(--ok)}.tag.bad{color:var(--bad);border-color:var(--bad)}.tag.warn{color:var(--warn);border-color:var(--warn)}
+.chat{display:flex;flex-direction:column;gap:8px;min-height:220px;max-height:460px;overflow:auto;padding:8px;background:var(--sunken);border-radius:8px}
+.b{max-width:85%;padding:8px 11px;border-radius:12px;white-space:pre-wrap}.b.u{align-self:flex-end;background:var(--accent);color:#fff}.b.a{align-self:flex-start;background:var(--surface);border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:13px}th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.tbl{overflow-x:auto}.muted{color:var(--muted)}.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--sunken);border-radius:8px;padding:10px}.kpi b{display:block;font-size:22px}
+.bar{height:10px;border-radius:5px;background:var(--line);overflow:hidden}.bar i{display:block;height:100%}
+.ghost{font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:var(--muted);border:1px dashed var(--line);border-radius:8px;padding:8px;min-height:36px;white-space:pre-wrap}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.foot{position:fixed;bottom:0;left:0;right:0;padding:6px 16px;background:var(--surface);border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+a{color:var(--accent)}

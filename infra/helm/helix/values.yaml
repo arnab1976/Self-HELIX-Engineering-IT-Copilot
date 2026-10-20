@@ -1,0 +1,20 @@
+image:
+  repository: ghcr.io/your-org/helix-api
+  tag: "0.1.0"
+replicas: 3
+env:
+  HELIX_ENV: prod
+  HELIX_OIDC_ISSUER: https://login.microsoftonline.com/<tenant>/v2.0
+  HELIX_OPA_URL: http://opa:8181
+  HELIX_T1A_URL: http://vllm-fim:8000/v1          # dedicated completion pool (isolated, KEDA on queue depth)
+  HELIX_T1B_URL: http://vllm-code:8000/v1         # multi-LoRA: L5 adapter
+  HELIX_T1C_URL: http://vllm-t1c:8000/v1          # multi-LoRA: L6 + L7 adapters
+  HELIX_T2_URL: http://vllm-general:8000/v1
+  HELIX_EMBEDDINGS_URL: http://tei-embed:80
+  HELIX_QDRANT_URL: http://qdrant:6333
+secretEnv:            # from External Secrets / Vault
+  - HELIX_APPROVAL_SECRET
+  - HELIX_T3_API_KEY
+resources:
+  requests: { cpu: "1", memory: 2Gi }
+  limits: { cpu: "2", memory: 4Gi }

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HELIX Portal</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><b>HELIX</b><span>Engineering &amp; IT Copilot · NEXUS</span></div>
+  <nav id="tabs"></nav>
+  <a class="btn" href="/learning">Learning portal</a>
+  <div class="persona">
+    <label for="persona">Signed in as</label>
+    <select id="persona">
+      <option value="u.priya">Priya · employee</option>
+      <option value="u.arjun" selected>Arjun · engineer</option>
+      <option value="sre.anita">Anita · SRE</option>
+      <option value="u.kavya">Kavya · payments engineer</option>
+      <option value="agent.sam">Sam · service desk</option>
+      <option value="venkat.k">Venkat · manager</option>
+    </select>
+  </div>
+</header>
+<main id="view"></main>
+<footer class="foot">Trace: <code id="lastTrace">-</code> · <a href="/docs" target="_blank" rel="noopener">OpenAPI</a> · <a href="/metrics" target="_blank" rel="noopener">metrics</a></footer>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{
+  "name": "helix-copilot",
+  "displayName": "HELIX Engineering Copilot",
+  "description": "Inline completion (L4 FIM) and codebase chat through the NEXUS gateway.",
+  "version": "0.1.0",
+  "publisher": "feuji-ai-practice",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["Programming Languages", "Machine Learning"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "helix.ask", "title": "HELIX: Ask about this code" },
+      { "command": "helix.signIn", "title": "HELIX: Sign in (dev token)" }
+    ],
+    "configuration": {
+      "title": "HELIX",
+      "properties": {
+        "helix.apiUrl": { "type": "string", "default": "http://localhost:8000", "description": "NEXUS gateway URL" },
+        "helix.devUser": { "type": "string", "default": "u.arjun", "description": "Dev persona (HELIX_ENV=dev only). Production uses OIDC." },
+        "helix.repo": { "type": "string", "default": "payments/checkout-service", "description": "Repository scope sent with requests" },
+        "helix.debounceMs": { "type": "number", "default": 150 }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "npx @vscode/vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.0"
+  }
+}

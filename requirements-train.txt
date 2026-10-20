@@ -1,0 +1,15 @@
+# GPU training stack for LEXORA L1-L7. Install on a CUDA machine (>= 24 GB GPU for QLoRA on 7-8B).
+# Versions pinned to a combination whose APIs the training scripts are written against.
+torch==2.4.1
+transformers==4.46.3
+datasets==3.1.0
+accelerate==1.1.1
+peft==0.13.2
+trl==0.12.1
+bitsandbytes==0.44.1
+sentence-transformers==3.3.1
+mlflow==2.18.0
+shap==0.46.0
+optuna==4.1.0
+# Optional, config-driven training
+# axolotl==0.5.2

@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package checkout.v1;
+
+message CardRequest {
+  string number = 1;
+  string expiry = 2;
+  string cvv = 3;
+}
+
+message ChargeResponse {
+  string status = 1;
+  string error_code = 2; // E1043 when the vault token cannot be decoded
+}
