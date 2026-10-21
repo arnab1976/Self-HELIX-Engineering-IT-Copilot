@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     confluence_space_id: str = ""
     loki_url: str = ""
     loki_query: str = ""
+    # Employee Self-Service portal tickets (Docker postgres:16 · profile stores)
+    postgres_url: str = "postgresql://postgres:helix@127.0.0.1:5432/helix"
 
     @property
     def is_dev(self) -> bool:

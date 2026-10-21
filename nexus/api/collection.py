@@ -31,6 +31,24 @@ class SourceCredentials(BaseModel):
     loki_query: str = Field(default="", max_length=2_000)
 
 
+class PortalTicket(BaseModel):
+    """Ticket created in the Agent 01 embedded employee self-service portal."""
+
+    id: str = Field(default="", max_length=40)
+    title: str = Field(..., min_length=3, max_length=400)
+    description: str = Field(default="", max_length=4000)
+    category: str = Field(..., min_length=2, max_length=120)
+    assignment_group: str = Field(..., min_length=2, max_length=120)
+    priority: str = Field(default="P3", max_length=8)
+    requester: str = Field(default="", max_length=200)
+    ci: str = Field(default="", max_length=120)
+    impact: str = Field(default="", max_length=40)
+    split: str = Field(default="train", max_length=16)
+    status: str = Field(default="New", max_length=40)
+    channel: str = Field(default="employee_self_service_portal", max_length=80)
+    created_at: str = Field(default="", max_length=40)
+
+
 class CollectionRequest(BaseModel):
     mode: Literal["simulation", "connected"] = "simulation"
     sources: list[Literal["code", "tickets", "knowledge", "logs", "observability"]] = Field(
@@ -41,6 +59,12 @@ class CollectionRequest(BaseModel):
     github_repo: str = Field(default="", max_length=200)
     credentials: SourceCredentials | None = None
     dedupe_threshold: float = Field(default=0.82, ge=0.5, le=0.99)
+    # Tickets filed in the embedded IT portal (merged with simulated/connected ITSM corpus)
+    portal_tickets: list[PortalTicket] = Field(default_factory=list, max_length=200)
+    # True = sanitise only portal/manual tickets (no simulated tickets.csv / connected ITSM pull)
+    portal_only: bool = False
+    # Intended Adapt track for manual portal journey: fine-tune (Path A) or retrieve (Path B)
+    portal_track: Literal["", "fine-tune", "retrieve"] = ""
 
 
 def _require_dev() -> None:
@@ -60,9 +84,18 @@ def run_collection(request: CollectionRequest):
     try:
         payload = request.model_dump()
         credentials = payload.pop("credentials", None) or {}
+        portal_tickets = payload.pop("portal_tickets", None) or []
+        portal_only = bool(payload.pop("portal_only", False))
+        portal_track = payload.pop("portal_track", "") or ""
         if not payload.get("github_repo") and credentials.get("github_repo"):
             payload["github_repo"] = credentials["github_repo"]
-        return collect_and_register(**payload, credentials=credentials)
+        return collect_and_register(
+            **payload,
+            credentials=credentials,
+            portal_tickets=portal_tickets,
+            portal_only=portal_only,
+            portal_track=portal_track,
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except RuntimeError as exc:

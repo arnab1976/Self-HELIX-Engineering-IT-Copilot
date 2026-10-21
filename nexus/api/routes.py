@@ -16,7 +16,10 @@ from lexora.registry import list_cards
 from nexus.api import schemas as S
 from nexus.api.adapt import adapt_api
 from nexus.api.chunking import chunking_api
+from nexus.api.l1_lab import l1_lab_api
+from nexus.api.rag_lab import rag_lab_api
 from nexus.api.collection import collection_api
+from nexus.api.portal_tickets_api import portal_tickets_api
 from nexus.completion.service import complete as do_complete
 from nexus.gateway.auth import Principal, current_user, mint_dev_token
 from nexus.gateway.ratelimit import limiter
@@ -351,5 +354,8 @@ def reset_demo(user: Principal = Depends(current_user)):
 
 
 api.include_router(collection_api)
+api.include_router(portal_tickets_api)
 api.include_router(chunking_api)
 api.include_router(adapt_api)
+api.include_router(rag_lab_api)
+api.include_router(l1_lab_api)
